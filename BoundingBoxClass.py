@@ -25,8 +25,8 @@ class BoundingBox():
         img_edges = self.cv2.Canny(img, 20, 150)   
         return img_edges                               
 
-    def findBBoxes(self, img, plot = True, areaThresh = 1000):
-        img = self.cropImage(img)
+    def findBBoxes(self, img, plot, areaThresh = 3000):
+        #img = self.cropImage(img)
         img_edges = self.findEdges(img) # Use self.blurImg(img)) to slightly blur the image
         contours, _ = self.cv2.findContours(img_edges, self.cv2.RETR_EXTERNAL, self.cv2.CHAIN_APPROX_SIMPLE) # self.cv2.RETR_EXTERNAL, self.cv2.CHAIN_APPROX_SIMPLE)
         rectangles = []
@@ -35,14 +35,14 @@ class BoundingBox():
         for contour in contours:
             rectangle = self.cv2.minAreaRect(contour)
             area = rectangle[1][0] * rectangle[1][1] # Length x width
-            if area > areaThresh:
+            if 10000 > area > areaThresh:
                 rectangles.append(rectangle) # For returning values
                 angle = self.np.int0(rectangle[2])
                 box = self.np.int0(self.cv2.boxPoints(rectangle))
-                if plot is True: 
+                if plot:
                     self.cv2.drawContours(img, [box], 0, (0, 0, 255), 2)
                     self.cv2.putText(img, 'Angle = ' + str(angle), (box[0][0], box[0][1]), self.cv2.FONT_HERSHEY_SIMPLEX, 0.75, (0, 255, 0), 2)
-        if plot is True:
+        if plot:
             self.cv2.imshow('Bounding Boxes', img)
             self.cv2.waitKey(0)
 

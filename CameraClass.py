@@ -124,8 +124,8 @@ class Camera():
         if key & 0xFF == ord('q') or key == 27:
             self.cv2.destroyAllWindows()
 
-    def capture(self):
-        if self.save:
+    def capture(self, save=False):
+        if save:
             baseName = self.sampleName + '_' + str(self.index)
             imgName = self.os.path.join(self.sampleName, baseName + '_color.jpg')
             self.index += 1
@@ -139,3 +139,4 @@ class Camera():
 
 if __name__ == '__main__':
     obj = Camera()
+    obj.capture()
