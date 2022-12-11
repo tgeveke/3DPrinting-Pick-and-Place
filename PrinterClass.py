@@ -2,13 +2,15 @@ class Printer:
     from printrun.pronsole import pronsole
 
     def __init__(self):
-        print("...Instantiating Printer object")
+        print('Printer class __init__()')
 
         # Creates object from pronsole class
-        self.pronsoleObject = self.connectedpronsole() 
+        self.printer = self.pronsole()
+
+        self.pronsoleObject = self.printer.connectedpronsole() 
         self.connected = False
         self.running = False
-        self.connect()
+        self.printer.connect()
     
     def connect(self):
         try:
@@ -59,3 +61,6 @@ class Printer:
     def disconnect(self):
         print("...Disconnecting")
         self.pronsoleObject.do_disconnect("")
+
+if __name__ == '__main__':
+    obj = Printer()

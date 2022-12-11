@@ -1,113 +1,105 @@
-import sys
-from time import sleep
-from xarm.wrapper import XArmAPI
-from CameraClass import Camera
+class app():
+    def __init__(self, robot=True, camera=True, gcode=True, gcodeFileName = r'TestData\GCode\bency-gcode.gcode', bbox=True, ml=True, printer=True):
+        import sys
+        if robot:
+            from RobotClass import Robot
+            self.Robot = Robot()
+        if camera:
+            from CameraClass import Camera
+            self.Camera = Camera(save=False)
+        if gcode:
+            from GCodeParserClass import GCodeParser
+            self.GCodeParser = GCodeParser(fileName=gcodeFileName)
+        if bbox:
+            from BoundingBoxClass import BoundingBox
+            self.BoundingBox = BoundingBox()
+        if ml:
+            from roboflow import Roboflow
+            rf = Roboflow(api_key="HNYW73nuLKdWCzXEO2EC")
+            project = rf.workspace("cias-lab").project("data-set-r52g6")
+            self.model = project.version(1).model
+        if printer:
+            from PrinterClass import Printer
+            self.Printer = Printer()
 
-ip = '192.168.1.207'
-arm = XArmAPI(ip)
-global_speed = 125
-plane = 'top'
+    def captureImage(self):
+        return self.Camera.capture()  # rgb_array, depth_array
 
-def grab():
-    arm.set_gripper_enable(True)
-    arm.set_gripper_position(800, wait=False)
-    arm.set_servo_angle(servo_id=6, angle=190, speed=50, is_radian=False, wait=True)
-    arm.set_position(z=-50, relative=True)
-    sleep(1)
-    arm.set_gripper_position(175, wait=True)  
+    def clusterGCode(self):
+        clusters = self.GCodeParser.cluster2D()
+        print(clusters[1])
+    
+    def avgGCode(self):
+        avgs = self.GCodeParser.averageXYZ()
+        return avgs
+    
+    def getBoundingBoxes(self, img, plot=True):
+        return self.BoundingBox.findBBoxes(img, plot)
+    
+    def xyangle_fromBBox(self, rectangle):
+        return rectangle[0]
+    
+    def moveToLocation(self, x, y, z, angle):
+        self.Robot.move2target(x, y, z, angle)
 
-def move2target():
-    distance = 125  # getDistance()
-    if 0 < distance < 200:  # Reasonable values
-        print('Distance to target:', distance)
-        if plane == 'front':
-            arm.set_position(x=distance, speed=50, relative=True, wait=True)
-        elif plane == 'top':
-            [x_i, y_i, z_i, roll_i, pitch_i, yaw_i] = locations['topPrinter']
-            arm.set_position(x=x_i, y=y_i, z=z_i-distance, roll=roll_i, pitch=pitch_i, yaw=yaw_i, speed=50, wait=True)
-    else:
-        print('Error with distance:', distance)
-        sys.exit()
+    def getMLoutput(self, imgName='TestData\Images\sample_6b26ca74_1_color.jpg'):
+        output = self.model.predict(imgName, confidence=40, overlap=30).json()['predictions'] #[0]
+        if len(output) > 0:
+            # Get values from model
+            x = output[0]['x']
+            y = output[0]['y']
 
-def captureImage():
-    # Read video
-    if camera is None:
-        camera = Camera()  # Runs init() function
-    return camera.getDistance()  # rgb_array, depth_array
+            return [x, y]
+        else:
+            print('No prediction made')
+            return
 
-def getDistanceLine():
-    # centerX = depth_array.shape[0] // 2
-    depth_array = captureImage()[1]
-    centerY = depth_array.shape[1] // 2
-    return depth_array[:, centerY]
+    def readInstructions(self, filename = 'instructions.txt'):
+        options = {
+            'wait': wait,
+            'reset': reset,
+            'go home': home,
+            'view front printer': view_frontPrinter,
+            'view top printer': view_topPrinter,
+            'capture image': captureImage,
+            'move to target position': move2target,
+            'grab': grab,
+            'view object top': viewObjectTop,
+            'get front distance': getFrontDistance
+        }
 
-def getFrontDistance():
-    distance_line = getDistanceLine()
-    print(distance_line)
-    minDistance = min(distance_line)
+        args = self.sys.argv()
+        print(args)
+        if len(args) > 1:
+            fileName = args[1]
+            try:
+                file = open(filename)
+            except:
+                print('Error opening file:', fileName)
+        for instruction in file.readlines():
+            if '#' not in instruction:  # Skips 'commented out' lines of instruction
+                print(instruction)
+                options[instruction.strip()]()
 
-locations = {
-    # [x, y, z, roll, pitch, yaw]
-    'frontPrinter': [50, 400, 50, -90, 90, 90],
-    'topPrinter': [-100, 400, 250, -180, 0, 0]
-}
+if __name__ == '__main__':
+    print('Running App')
+    obj = app(robot=True, camera=False, gcode=False, bbox=False, ml=False, printer=False)
 
-def view_frontPrinter():
-    setPlane('front')
+    # imgs = obj.captureImage()
+    # colorImg = imgs[0]
+    # imgname = imgs[2]
 
-    location_values = locations['frontPrinter']
-    [x_i, y_i, z_i, roll_i, pitch_i, yaw_i] = location_values
-    arm.set_position(x=x_i, y=y_i, z=z_i, roll=roll_i, pitch=90, yaw=yaw_i, speed=global_speed, wait=True)
+    imgname = 'sample_a3d90371\sample_a3d90371_0_color.jpg'
 
-def view_topPrinter():
-    setPlane('top')
+    # MLoutput = obj.getMLoutput(imgName=imgname)
+    # print(MLoutput)
 
-    location_values = locations['topPrinter']
-    [x_i, y_i, z_i, roll_i, pitch_i, yaw_i] = location_values
-    arm.set_position(x=x_i, y=y_i, z=z_i, roll=roll_i, pitch=pitch_i, yaw=yaw_i, speed=global_speed, wait=True)
+    #colorImg = obj.BoundingBox.openImg(imgname)
+    #bbox = obj.getBoundingBoxes(colorImg, plot=True)
+    #for rectangle in bbox:
+        # xyang_fromBBox = obj.xyangle_fromBBox(rectangle)
+        # print(rectangle)
+    
+    # GCode_avgXYZ = obj.avgGCode()
+    # print(GCode_avgXYZ)
 
-def viewObjectTop():
-    setPlane('top')
-
-def setPlane(current_plane):
-    global plane
-    plane = current_plane
-
-def wait():
-    sleep(10)
-
-def home():
-    arm.move_gohome(speed=50)
-
-def reset():
-    arm.clean_warn()
-    arm.clean_gripper_error()
-    arm.clean_error()
-    arm.reset()
-
-options = {
-    'wait': wait,
-    'reset': reset,
-    'go home': home,
-    'view front printer': view_frontPrinter,
-    'view top printer': view_topPrinter,
-    'capture image': captureImage,
-    'move to target position': move2target,
-    'grab': grab,
-    'view object top': viewObjectTop,
-    'get front distance': getFrontDistance
-}
-
-# fileName = sys.argv[2]
-fileName = 'instructions.txt'
-try:
-    file = open(fileName)
-except:
-    print('Error opening file:', fileName)
-
-for instruction in file.readlines():
-    if '#' not in instruction:  # Skips 'commented out' lines of instruction
-        print(instruction)
-        options[instruction.strip()]()
-
-arm.disconnect()

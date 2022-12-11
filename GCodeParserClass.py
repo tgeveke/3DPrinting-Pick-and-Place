@@ -6,15 +6,18 @@ class GCodeParser:
     import numpy as np
     import matplotlib.pyplot as plt
 
-    def __init__(self, fileName, allPoints = False, maxRuns = 100000):
+    def __init__(self, fileName, allPoints = False, maxRuns = 100000, plot=False, save=False):
         print('GCodeParser class __init__()')
         with open(fileName, 'r') as gcodeFile:
             print('File:', fileName, "opened successfully")
             self.lines = gcodeFile.readlines()
+        self.fileName = fileName
         self.numLines = len(self.lines)
         print('Number of lines =', self.numLines)
         if allPoints: self.maxRuns = self.numLines
         else: self.maxRuns = maxRuns
+        self.plot = plot
+        self.save = save
         self.parse()
 
     def parse(self):
@@ -49,9 +52,14 @@ class GCodeParser:
     def averageXYZ(self, precision = 3):
         if self.points is not None:
             print('Getting average (x, y, z)')
-            avgX = round(sum(self.allX) / len(self.allX), precision)
-            avgY = round(sum(self.allY) / len(self.allY), precision)
-            avgZ = round(sum(self.allZ) / len(self.allZ), precision)
+
+            allX = [point[0] for point in self.points]
+            allY = [point[1] for point in self.points]
+            allZ = [point[2] for point in self.points]
+
+            avgX = round(sum(allX) / len(allX), precision)
+            avgY = round(sum(allY) / len(allY), precision)
+            avgZ = round(sum(allZ) / len(allZ), precision)
             return (avgX, avgY, avgZ)
 
     def graph3D(self):  
@@ -85,19 +93,24 @@ class GCodeParser:
         clusters = hcluster.fclusterdata(data, thresh, criterion="distance")
 
         # Plotting
-        self.plt.scatter(*self.np.transpose(data), c=clusters)
-        title = "Clustering: Threshold: %f, Number of clusters: %d" % (round(thresh,3), len(set(clusters)))
-        self.plt.title(title)
-        self.plt.show()        
-
-
+        if self.plot:
+            self.plt.scatter(*self.np.transpose(data), c=clusters)
+            title = "Clustering: Threshold: %f, Number of clusters: %d" % (round(thresh, 3), len(set(clusters)))
+            self.plt.title(title)
+            self.plt.show()     
+        if self.save:
+            # Save image
+            from os import path
+            self.plt.savefig(path.splitext(self.fileName)[0] + '.png')
+        return clusters
+   
 if __name__ == "__main__":
     import time
     startTime = time.time()
 
-    obj = GCodeParser(fileName='TestData/other-test-gcode.gcode', allPoints=False, maxRuns=100000)
+    obj = GCodeParser(fileName='TestData/GCode/other-test-gcode.gcode', allPoints=False, maxRuns=100000)
     totalTime = round(time.time() - startTime, 3)
     print('Runtime =', totalTime, 'seconds')
 
-    obj.graph3D()
+    # obj.graph3D()
     obj.cluster2D()
