@@ -59,6 +59,6 @@ class BoundingBox():
 
 if __name__ == '__main__':
     obj = BoundingBox()
-    img_fileName = 'sample_f065f939/sample_f065f939_1_color.jpg'  # 'TestData/GCode/other-test-gcode.png' # 'TestData/Images/sample_6b26ca74_1_color.jpg'
+    img_fileName = 'TestData/GCode/other-test-gcode.png' # 'TestData/Images/sample_6b26ca74_1_color.jpg'
     img = obj.openImg(img_fileName)
     boundingBoxes = obj.findBBoxes(img, plot=True)

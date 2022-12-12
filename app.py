@@ -102,9 +102,9 @@ if __name__ == '__main__':
     mlx = MLoutput[0]
     mly = MLoutput[1]
 
-    bbox = obj.getBoundingBoxes(colorImg, plot=True)
+    bbox = obj.getBoundingBoxes(colorImg, plot=False)
     while len(bbox) == 0:
-        bbox = obj.getBoundingBoxes(colorImg, plot=True)
+        bbox = obj.getBoundingBoxes(colorImg, plot=False)
 
     thresh = 15
     for rectangle in bbox:
