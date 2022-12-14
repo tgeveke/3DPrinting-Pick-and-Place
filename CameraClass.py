@@ -59,7 +59,10 @@ class Camera():
             try:
                 while True:
                     # Get frameset of color and depth
-                    frames = pipeline.wait_for_frames()
+                    try:
+                        frames = pipeline.wait_for_frames()
+                    except:
+                        frames = pipeline.wait_for_frames()
 
                     # Align the depth frame to color frame
                     aligned_frames = align.process(frames)

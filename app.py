@@ -102,9 +102,9 @@ if __name__ == '__main__':
     mlx = MLoutput[0]
     mly = MLoutput[1]
 
-    bbox = obj.getBoundingBoxes(colorImg, plot=False)
+    bbox = obj.getBoundingBoxes(colorImg, plot=True)
     while len(bbox) == 0:
-        bbox = obj.getBoundingBoxes(colorImg, plot=False)
+        bbox = obj.getBoundingBoxes(colorImg, plot=True)
 
     thresh = 15
     for rectangle in bbox:
@@ -112,8 +112,7 @@ if __name__ == '__main__':
         print(xy)
         x = xy[0]
         y = xy[1]
-        if int(x) in range(int(mlx) - thresh, int(mlx) + thresh) and int(y) in range(int(mly) - thresh,
-                                                                                     int(mly) + thresh):
+        if int(x) in range(int(mlx) - thresh, int(mlx) + thresh) and int(y) in range(int(mly) - thresh, int(mly) + thresh):
             print('Found matching point')
             angle = round(rectangle[2], 2)
             print('Angle =', angle)
