@@ -7,14 +7,14 @@ class Printer:
         # Creates object from pronsole class
         self.printer = self.pronsole()
 
-        self.pronsoleObject = self.printer.connectedpronsole() 
+        # self.pronsoleObject = self.printer.connectedpronsole() 
         self.connected = False
         self.running = False
         self.printer.connect()
     
     def connect(self):
         try:
-            self.pronsoleObject.do_connect("")
+            self.printer.do_connect("")
             self.connected = True
         except:
             print("Error connecting to printer")
