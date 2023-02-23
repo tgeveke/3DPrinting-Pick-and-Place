@@ -237,15 +237,13 @@ if __name__ == '__main__':
     obj.GCodeParser.save = True
     obj.GCodeParser.plot = True
 
-
+    # New code for bounding box + gcode plotting
     save_name = obj.GCodeParser.plot2D()
     print(save_name)
     
-    img = obj.BoundingBox.openImg(fileName=r'C:\Users\tjgev\Desktop\Post Grad\3DPrinting-Pick-and-Place\TestData\GCode\bency-gcode_overhead2D.png') # save_name)
+    img = obj.BoundingBox.openImg(fileName=save_name)
     obj.getBoundingBoxes(img=img)
-
-    # img = obj.BoundingBox.cv2.imread(save_name)
-    # obj.BoundingBox.cv2.imshow('ouc', save_name)
-
+    
+    # Tells how long it took
     totalTime = round(time.time() - startTime, 2)
     print('Runtime =', totalTime, 'seconds')
