@@ -2,12 +2,14 @@ class BoundingBox():
     import cv2
     import numpy as np
 
-    def __init__(self):
+    def __init__(self, plot):
         print('Bounding Box class __init__()')
+        self.plot = plot
 
     def openImg(self, fileName):
         try:
             img = self.cv2.imread(fileName)
+            print(f'File: {fileName} opened successfully')
             return img
         except:
             print('Error opening file:', fileName)
@@ -25,9 +27,8 @@ class BoundingBox():
         img_edges = self.cv2.Canny(img, 60, 80)
         return img_edges
 
-    def findBBoxes(self, img, plot, areaThresh=3000):
+    def findBBoxes(self, img, areaThresh=3000):
         img_edges = self.findEdges(self.blurImg(img))  # Use self.blurImg(img)) to slightly blur the image
-        self.cv2.imshow('Edges', img_edges)
         contours, _ = self.cv2.findContours(img_edges, self.cv2.RETR_EXTERNAL, self.cv2.CHAIN_APPROX_SIMPLE)
         rectangles = []
 
@@ -39,11 +40,12 @@ class BoundingBox():
                 rectangles.append(rectangle)  # For returning values
                 angle = self.np.int0(rectangle[2])
                 box = self.np.int0(self.cv2.boxPoints(rectangle))
-                if plot:
+                if self.plot:
                     self.cv2.drawContours(img, [box], 0, (0, 0, 255), 2)
                     self.cv2.putText(img, 'Angle = ' + str(angle), (box[0][0], box[0][1]),
                                      self.cv2.FONT_HERSHEY_SIMPLEX, 0.75, (0, 255, 0), 2)
-        if plot:
+        if self.plot:
+            self.cv2.imshow('Edges', img_edges)
             self.cv2.imshow('Bounding Boxes', img)
             self.cv2.waitKey(0)
 
@@ -58,7 +60,7 @@ class BoundingBox():
 
 
 if __name__ == '__main__':
-    obj = BoundingBox()
+    obj = BoundingBox(plot=True)
     img_fileName = 'TestData/GCode/other-test-gcode.png' # 'TestData/Images/sample_6b26ca74_1_color.jpg'
     img = obj.openImg(img_fileName)
-    boundingBoxes = obj.findBBoxes(img, plot=True)
+    boundingBoxes = obj.findBBoxes(img)

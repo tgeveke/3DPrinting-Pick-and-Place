@@ -76,3 +76,4 @@ class Robot():
 
 if __name__ == '__main__':
     obj = Robot()
+    # obj.view_topPrinter()

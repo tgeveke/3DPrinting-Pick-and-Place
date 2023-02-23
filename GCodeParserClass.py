@@ -6,18 +6,30 @@ class GCodeParser:
     import numpy as np
     import matplotlib.pyplot as plt
 
-    def __init__(self, fileName, allPoints = False, maxRuns = 100000, plot=False, save=False):
+    def __init__(self, fileName: str, 
+                       allPoints: bool = False, 
+                       maxRuns: int = 100000, 
+                       plot: bool = False,
+                        save: bool = False):
         print('GCodeParser class __init__()')
-        with open(fileName, 'r') as gcodeFile:
-            print('File:', fileName, "opened successfully")
-            self.lines = gcodeFile.readlines()
+        
+        if allPoints: 
+            self.maxRuns = self.numLines
+        else: 
+            self.maxRuns = maxRuns
+        self.plot = plot
+        self.save = save
+
+        try:
+            with open(fileName, 'r') as gcodeFile:
+                print(f'File: {fileName} opened successfully')
+                self.lines = gcodeFile.readlines()
+        except FileNotFoundError:
+            print(f'{fileName} not found in GCodeParser, exiting')
+            exit()
         self.fileName = fileName
         self.numLines = len(self.lines)
         print('Number of lines =', self.numLines)
-        if allPoints: self.maxRuns = self.numLines
-        else: self.maxRuns = maxRuns
-        self.plot = plot
-        self.save = save
         self.parse()
 
     def parse(self):
@@ -65,7 +77,6 @@ class GCodeParser:
     def graph3D(self):  
         from mpl_toolkits import mplot3d
                 
-        fig = self.plt.figure()
         plot = self.plt.axes(projection='3d')
         
         xdata = [point[0] for point in self.points]
@@ -81,7 +92,34 @@ class GCodeParser:
         
         plot.scatter3D(xdata, ydata, zdata, c=zdata, cmap='prism');
         self.plt.show()
-    
+
+    def plot2D(self):        
+        xdata = [point[0] for point in self.points]
+        ydata = [point[1] for point in self.points]
+        
+        fig = self.plt.figure()
+        self.plt.xlabel ='X'
+        self.plt.xlim = (0, 250)
+        self.plt.ylabel = 'Y'
+        self.plt.ylim = (0, 250)
+        
+        # Plot
+        self.plt.plot(xdata, ydata)
+        self.plt.title('2D Overhead Graph')
+        
+        # Check if you want to show
+        if self.plot:
+            self.plt.show() 
+
+        # Check if you want to save
+        if self.save:
+            # Save image
+            from os import path
+            save_name = path.splitext(self.fileName)[0] + '_overhead2D.png'
+            fig.savefig(save_name) 
+            print(f'Saved image at file: {save_name}') 
+            return save_name    
+
     def cluster2D(self, numPoints = 12000, thresh = 25):
         import scipy.cluster.hierarchy as hcluster
 
@@ -95,22 +133,29 @@ class GCodeParser:
         # Plotting
         if self.plot:
             self.plt.scatter(*self.np.transpose(data), c=clusters)
-            title = "Clustering: Threshold: %f, Number of clusters: %d" % (round(thresh, 3), len(set(clusters)))
+            title = f'Clustering: Threshold: {round(thresh, 3)}, Number of clusters: {len(set(clusters))}'
             self.plt.title(title)
             self.plt.show()     
         if self.save:
             # Save image
             from os import path
-            self.plt.savefig(path.splitext(self.fileName)[0] + '.png')
+            self.plt.gcf()
+            self.plt.savefig(path.splitext(self.fileName)[0] + '_2Dcluster.png')
         return clusters
    
 if __name__ == "__main__":
+    # ----- TESTING ----- #
     import time
-    startTime = time.time()
+    start_time = time.time()
 
-    obj = GCodeParser(fileName='TestData/GCode/other-test-gcode.gcode', allPoints=False, maxRuns=100000)
-    totalTime = round(time.time() - startTime, 3)
-    print('Runtime =', totalTime, 'seconds')
+    gcode_file_name = r'TestData\GCode\bency-gcode.gcode'
 
+    obj = GCodeParser(fileName=gcode_file_name, allPoints=False, maxRuns=100000, plot=True, save=True)
+   
+    total_time = round(time.time() - start_time, 3)
+    print(f'Runtime = {total_time} seconds')
+
+    # --- Check Class Methods --- #
     # obj.graph3D()
     obj.cluster2D()
+    obj.plot2D()

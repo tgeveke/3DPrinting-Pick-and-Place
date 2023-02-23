@@ -13,6 +13,16 @@ class Camera():
 
     def __init__(self, stream=False, save=True, delay=1):
         print('Camera class __init__()')
+
+        #
+        '''
+        ctx = self.rs.context()
+        devices = ctx.query_devices()
+        for dev in devices:
+            dev.hardware_reset()
+        '''
+        #
+
         if save:
             self.index = 0
             self.sampleName = 'sample_' + ''.join(self.random.choice('0123456789abcdef') for i in range(8))
@@ -110,8 +120,10 @@ class Camera():
     def capture(self, save=False):
         if not self.stream:
             # Get frameset of color and depth
-            frames = self.pipeline.wait_for_frames()
-
+            try:
+                frames = self.pipeline.wait_for_frames()
+            except:
+                frames = self.pipeline.wait_for_frames()
             # Align the depth frame to color frame
             aligned_frames = self.align.process(frames)
 
@@ -148,10 +160,17 @@ class Camera():
             return [cropped_color, cropped_depth, imgName]
         else:
             return [cropped_color, cropped_depth]
+
     def __del__(self):
         print('Deleting camera object')
         self.pipeline.stop()
 
 if __name__ == '__main__':
+    import time
+    startTime = time.time()
+
     obj = Camera(save=True, stream=False)
     obj.capture(save=True)
+
+    totalTime = round(time.time() - startTime, 2)
+    print('Runtime =', totalTime, 'seconds')
